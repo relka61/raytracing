@@ -23,14 +23,17 @@ function setup() {
 }
 
 function draw() {
+  //Update the camera
   cam.move();
 
+  //Update the shader uniforms
   raytracer.setUniform("resolution", [width, height]);
   raytracer.setUniform("pixel00", [cam.pixel00.x, cam.pixel00.y, cam.pixel00.z]);
   raytracer.setUniform("pixelU", [cam.pixelU.x, cam.pixelU.y, cam.pixelU.z]);
   raytracer.setUniform("pixelV", [cam.pixelV.x, cam.pixelV.y, cam.pixelV.z])
   raytracer.setUniform("cameraCenter", [cam.center.x, cam.center.y, cam.center.z]);
   
+  //Run the shader
   shader(raytracer);
   rect(0, 0, width, height);
 }

@@ -11,9 +11,9 @@ uniform vec3 pixelU;
 uniform vec3 pixelV;
 uniform vec3 cameraCenter;
 
-
-const int samples = 20;
-const int maxBounces = 3;
+const int samples = 1;
+const int maxBounces = 200;
+const int spheresAmount = 4;
 
 const float sampleWeight = 1.0 / float(samples);
 const float infinity = pow(2.0, 32.0) - 1.0;
@@ -31,9 +31,6 @@ struct HitRecord {
     bool hit;
     vec3 color;
 };
-
-const int spheresAmount = 4;
-
 
 
 float random(vec2 state) {
@@ -100,7 +97,7 @@ vec3 rayColor(Ray ray, HitRecord record, float tmin, float tmax, vec2 seed) {
     spheres[2] = vec4(0.7, 0.2, 0.2, 0.15);
     spheres[3] = vec4(0.6, -0.2, 0.4, 0.2);
 
-    for(int j = 0; j <= maxBounces; j++) {
+    for (int j = 0; j <= maxBounces; j++) {
         record.hit = false;
         record.t = tmax;
 
@@ -130,7 +127,7 @@ vec3 rayColor(Ray ray, HitRecord record, float tmin, float tmax, vec2 seed) {
 
     record.color = vec3(0.0);
     return record.color;
-}   
+} 
 
 
 void main() {
@@ -150,6 +147,8 @@ void main() {
 
         color += sampleWeight * rayColor(ray, record, 0.001, infinity, seed);
     }
+
+    // color = vec3(float(maxBounces2) / 20.0);
 
     gl_FragColor = vec4(color, 1.0);
 }
