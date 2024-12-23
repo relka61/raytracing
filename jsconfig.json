@@ -6,8 +6,5 @@
     "*.js",
     "**/*.js",
     "c:\\Users\\quirk\\.vscode\\extensions\\samplavigne.p5-vscode-1.2.16\\p5types\\global.d.ts"
-  ],
-  "exclude": [
-    "libraries"
   ]
 }

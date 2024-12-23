@@ -116,12 +116,12 @@ vec3 rayColor(Ray ray, HitRecord record, float tmin, float tmax, vec2 seed) {
             ray.origin += record.t * ray.direction;
 
             //Diffuse Material
-            ray.direction = record.normal + randomVector(seed + record.color.xy);
-            record.color *= 0.5;
+            // ray.direction = record.normal + randomVector(seed + record.color.xy);
+            // record.color *= 0.5;
 
             //Mirror
-            // ray.direction = ray.direction - 2.0 * dot(ray.direction, normal) * normal;
-            // record.color *= 0.95;
+            ray.direction = ray.direction - 2.0 * dot(ray.direction, record.normal) * record.normal;
+            record.color *= 0.95;
         } else {
             vec3 background = background(ray.direction, vec3(0.2, 0.6, 1.0), vec3(1.0, 1.0, 0.8), 0.15 );
             return record.color * background;
