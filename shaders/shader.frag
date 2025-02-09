@@ -10,15 +10,19 @@ uniform vec3 pixelU;
 uniform vec3 pixelV;
 uniform vec3 cameraCenter;
 
-const int samples = 40;
+uniform float defocusAngle;
+uniform vec3 defocusDiskU;
+uniform vec3 defocusDiskV;
+
+const int samples = 5;
 const int maxBounces = 5;
-const int spheresAmount = 5;
+const int spheresAmount = 4;
 
 const float sampleWeight = 1.0 / float(samples);
 const float infinity = pow(2.0, 32.0) - 1.0;
 const float pi = 3.14159265359;
 
-const float gamma = 4.1;
+const float gamma = 1.7;
 
 struct Material {
     int type; // 0 = Lambertian, 1 = Metal, 2 = Dielectric
@@ -59,6 +63,12 @@ vec3 randomInCircle(vec2 seed) {
     return vec3(r * cos(t), r * sin(t), 0.0);
 }
 
+vec3 defocusDiskSample(vec3 center, vec3 u, vec3 v, vec2 seed) {
+    vec3 diskSample = randomInCircle(seed);
+    return center + diskSample.x * u + diskSample.y * v;
+}
+
+
 void hitSphere(Ray ray, inout HitRecord record, vec3 center, float radius, float tmin, float tmax, Material testMaterial) {
     // Calculate initial variables
     vec3 oc = center - ray.origin;
@@ -98,7 +108,7 @@ vec3 background(vec3 direction, vec3 sunDirection, vec3 sunColor, float sunSize)
     vec3 unitDirection = normalize(direction);
     float t = 0.5 * (unitDirection.y + 1.0);
     vec3 baseColor = vec3(1.0 - t) + t * vec3(0.4, 0.6, 1.0);
-    baseColor = vec3(0.0);
+    // baseColor = vec3(0.0);
 
     float angle = acos(dot(unitDirection, normalize(sunDirection)));
     float sunEffect = exp(-pow(angle / sunSize, 0.8));
@@ -181,13 +191,10 @@ vec3 rayColor(Ray ray, HitRecord record, float tmin, float tmax, vec2 seed) {
     materials[1] = Material(0, vec3(0.1, 0.2, 0.5), 0.0, 1.0);
 
     spheres[2] = vec4(-1.0, 0.0, -1.0, 0.5);
-    materials[2] = Material(2, vec3(1.0, 1.0, 1.0), 0.0, 1.5);
+    materials[2] = Material(2, vec3(1.0, 1.0, 1.0), 0.0, 1.52);
 
-    spheres[3] = vec4(-1.0, 0.0, -1.0, 0.4);
-    materials[3] = Material(2, vec3(1.0, 1.0, 1.0), 0.0, 1.0 / 1.5);
-
-    spheres[4] = vec4(1.0, 0.0, -1.0, 0.5);
-    materials[4] = Material(1, vec3(0.8, 0.6, 0.2), 0.0, 1.0);
+    spheres[3] = vec4(1.0, 0.0, -1.0, 0.5);
+    materials[3] = Material(1, vec3(0.8, 0.6, 0.2), 0.0, 1.0);
 
     for (int j = 0; j <= maxBounces; j++) {
         record.hit = false;
@@ -221,7 +228,7 @@ void main() {
         vec2 seed = st / resolution + vec2(sample);
 
         Ray ray;
-        ray.origin = cameraCenter;
+        ray.origin = (defocusAngle <= 0.0) ? cameraCenter : defocusDiskSample(cameraCenter, defocusDiskU, defocusDiskV, seed);
         ray.direction = pixelCenter - cameraCenter;
 
         HitRecord record;
