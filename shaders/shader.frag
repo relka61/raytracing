@@ -4,6 +4,7 @@
     precision highp float;
 #endif
 
+
 uniform vec2 resolution;
 uniform vec3 pixel00;
 uniform vec3 pixelU;
@@ -14,6 +15,7 @@ uniform float defocusAngle;
 uniform vec3 defocusDiskU;
 uniform vec3 defocusDiskV;
 
+
 const int samples = 5;
 const int maxBounces = 5;
 const int spheresAmount = 4;
@@ -22,7 +24,9 @@ const float sampleWeight = 1.0 / float(samples);
 const float infinity = pow(2.0, 32.0) - 1.0;
 const float pi = 3.14159265359;
 
-const float gamma = 1.7;
+
+const float gamma = 1.0;
+
 
 struct Material {
     int type; // 0 = Lambertian, 1 = Metal, 2 = Dielectric
@@ -37,14 +41,24 @@ struct Ray {
 };
 
 struct HitRecord {
+    float t;
     vec3 point;
     vec3 normal;
     bool frontFace;
-    float t;
     bool hit;
     vec3 color;
     Material mat;
 };
+
+
+
+
+
+
+
+
+// --- Random Functions ---
+
 
 float random(vec2 state) {
     return fract(sin(dot(state.xy ,vec2(12.9898, 78.233))) * 43758.5453);
@@ -67,6 +81,15 @@ vec3 defocusDiskSample(vec3 center, vec3 u, vec3 v, vec2 seed) {
     vec3 diskSample = randomInCircle(seed);
     return center + diskSample.x * u + diskSample.y * v;
 }
+
+
+
+
+
+
+
+
+// --- Collision Detection ---
 
 
 void hitSphere(Ray ray, inout HitRecord record, vec3 center, float radius, float tmin, float tmax, Material testMaterial) {
@@ -103,6 +126,16 @@ void hitSphere(Ray ray, inout HitRecord record, vec3 center, float radius, float
         record.frontFace = false;
     }
 }
+
+
+
+
+
+
+
+
+// --- Materials ---
+
 
 vec3 background(vec3 direction, vec3 sunDirection, vec3 sunColor, float sunSize) {
     vec3 unitDirection = normalize(direction);
@@ -180,12 +213,22 @@ void rayHit(inout Ray ray, inout HitRecord record, vec2 seed) {
     }
 }
 
+
+
+
+
+
+
+
+// --- Ray Tracing ---
+
+
 vec3 rayColor(Ray ray, HitRecord record, float tmin, float tmax, vec2 seed) {
     vec4 spheres[spheresAmount];
     Material materials[spheresAmount];
 
     spheres[0] = vec4(0.0, -100.5, -1.0, 100);
-    materials[0] = Material(0, vec3(0.8, 0.8, 0.0), 0.0, 1.0);
+    materials[0] = Material(0, vec3(0.6, 0.6, 0.6), 1.0, 1.52);
 
     spheres[1] = vec4(0.0, 0.0, -1.0, 0.5);
     materials[1] = Material(0, vec3(0.1, 0.2, 0.5), 0.0, 1.0);
@@ -209,7 +252,7 @@ vec3 rayColor(Ray ray, HitRecord record, float tmin, float tmax, vec2 seed) {
         if (record.hit) {
             rayHit(ray, record, seed);
         } else {
-            vec3 bgColor = background(ray.direction, vec3(1.0, 0.6, 0.5), vec3(5.0, 5.0, 4.0), 0.05);
+            vec3 bgColor = background(ray.direction, vec3(1.0, 0.6, 0.5), vec3(200.0, 200.0, 160.0), 0.005);
             record.color *= bgColor;
             return record.color;
         }
@@ -218,6 +261,16 @@ vec3 rayColor(Ray ray, HitRecord record, float tmin, float tmax, vec2 seed) {
     record.color = vec3(0.0);
     return record.color;
 }
+
+
+
+
+
+
+
+
+// --- Main ---
+
 
 void main() {
     vec3 color = vec3(0.0);
