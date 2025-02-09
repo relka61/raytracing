@@ -27,7 +27,7 @@ function setup() {
   lookFrom = createVector(0.0, 0.0, 0.0);
   lookDirection = createVector(0.0, 0.0, -1.0);
   viewUp = createVector(0.0, 1.0, 0.0);
-  cam = new Camera(aspectRatio, imageWidth, lookFrom, lookDirection, viewUp);
+  cam = new Camera(aspectRatio, imageWidth, lookFrom, lookDirection, viewUp, 90, 0.01, 1.0);
 
 
   // Create the canvas
@@ -46,6 +46,9 @@ function draw() {
   raytracer.setUniform("pixelU", [cam.pixelU.x, cam.pixelU.y, cam.pixelU.z]);
   raytracer.setUniform("pixelV", [cam.pixelV.x, cam.pixelV.y, cam.pixelV.z]);
   raytracer.setUniform("cameraCenter", [cam.lookFrom.x, cam.lookFrom.y, cam.lookFrom.z]);
+  raytracer.setUniform("defocusAngle", cam.defocusAngle);
+  raytracer.setUniform("defocusDiskU", [cam.defocusDiskU.x, cam.defocusDiskU.y, cam.defocusDiskU.z]);
+  raytracer.setUniform("defocusDiskV", [cam.defocusDiskV.x, cam.defocusDiskV.y, cam.defocusDiskV.z]);
   
   // Run the shader
   shader(raytracer);
@@ -74,7 +77,7 @@ function mouseWheel(event) {
 
 
 class Camera {
-  constructor(aspectRatio, imageWidth, lookFrom, lookDirection, viewUp, verticalFOV = 90, defocusAngle = 0, focusDisk = 10) {
+  constructor(aspectRatio, imageWidth, lookFrom, lookDirection, viewUp, verticalFOV = 90, defocusAngle = 0, focusDist = 1) {
     // Set variables
     this.lookFrom = lookFrom;
     this.lookDirection = lookDirection;
@@ -82,7 +85,7 @@ class Camera {
 
     this.verticalFOV = verticalFOV;
     this.defocusAngle = defocusAngle;
-    this.focusDisk = focusDisk;
+    this.focusDist = focusDist;
 
     // Calculate the image dimensions
     this.imageWidth = imageWidth;
@@ -140,7 +143,7 @@ class Camera {
     //Determine viewport dimensions
     let theta = this.verticalFOV * PI / 180;
     let h = tan(theta / 2);
-    this.viewportHeight = 2.0 * h * this.focusDisk;
+    this.viewportHeight = 2.0 * h * this.focusDist;
     this.viewportWidth = this.viewportHeight * (this.imageWidth / this.imageHeight);
 
     // Calculate u, v, w basis vectors
@@ -161,15 +164,19 @@ class Camera {
 
     // Calculate location of upper left pixel
     this.viewportUpperLeft = this.lookFrom.copy();
-    this.viewportUpperLeft.sub(this.w.mult(this.focalLength));
+    this.viewportUpperLeft.sub(this.w.mult(this.focusDist));
     this.viewportUpperLeft.sub(this.viewportU.mult(0.5));
     this.viewportUpperLeft.sub(this.viewportV.mult(0.5));
 
     this.pixel00 = this.viewportUpperLeft.copy();
     // this.pixel00.add(this.pixelU.mult(0.5));
     // this.pixel00.add(this.pixelV.mult(0.5));
-
     // well these commented line should really be there but it works without them soooooo
+
+    // Calculate the camera defocus disk
+    this.defocusRadius = this.focusDist * tan(this.defocusAngle / 2);
+    this.defocusDiskU = this.u.copy().mult(this.defocusRadius);
+    this.defocusDiskV = this.v.copy().mult(this.defocusRadius);
   }
 }
 
